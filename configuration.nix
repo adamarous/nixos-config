@@ -1,5 +1,4 @@
-# PAY ATTENTION HERE!
-# Once you get a working graphical environment:
+# Todo list:
 # Check messages scattered throughout the config for post-config tweaking.
 # Consider setting up networking.networkmanager.ensureProfiles.profiles as well
 # as networking.networkmanager.settings to further enforce declarativeness.
@@ -37,6 +36,8 @@
 # WiFi might be interfering with the bluetooth audio channel because they likely
 # use the same hardware card, but do look into the issue of random stuttering.
 # The fontconfig seems not to be working on Firefox.
+# Set up home-manager for managing home directory configs like i3; don't
+# configure them just yet.
 
 { config, lib, pkgs, ... }:
 
@@ -48,8 +49,8 @@
 
   # Hardware and firmware management.
   hardware = {
-    enableAllFirmware = true;
-    acpilight.enable = true;
+    enableAllFirmware = true; # Disregard license control.
+    acpilight.enable = true; # Backlight control.
     bluetooth.enable = true;
     cpu.amd.updateMicrocode = true;
     opengl = {
@@ -88,24 +89,23 @@
     block = [ "fakenews" "gambling" "porn" "social" ];
   };
 
-  # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-
-  # Useful systemd-boot options.
-  boot.loader.systemd-boot.consoleMode = "max"; # Change scaling for best screen
-                                                # fit.
-  boot.loader.systemd-boot.editor = false; # Disable root access through kernel
-                                           # parameter init=/bin/sh to enhance
-					   # security.
-  boot.loader.timeout = 20; # Change time for auto-booting into pre-selected
-                            # boot option; "null" option for no time is broken
-			    # as of 05/2024.
-
-  # Eye-candy for the boot process; hides initial status messages.
-  boot.plymouth.enable = true;
-  boot.plymouth.font =
-  "${pkgs.jetbrains-mono}/share/fonts/truetype/JetBrainsMono-Bold.ttf";
+  # Use the systemd-boot EFI boot loader and configure it.
+  boot = {
+    loader = {
+      systemd-boot.enable = true;
+      efi.canTouchEfiVariables = true;
+      systemd-boot.consoleMode = "max"; # Change scaling for best screen fit.
+      systemd-boot.editor = false; # Disable root access through kernel parameter
+                                   # init=/bin/sh to enhance security.
+      timeout = 20; # Change time for auto-booting into pre-selected boot option;
+                    # "null" option for no time is broken as of 05/2024.
+    };
+    # Eye-candy for the boot process; hides initial status messages.
+    plymouth.enable = true;
+    # Check if plymouth font is any useful during boot; if so, try to shorten
+    # the line length to adhere to the 80 char. limit.
+    # plymouth.font = "${pkgs.jetbrains-mono}/share/fonts/truetype/JetBrainsMono-Bold.ttf";
+  };
 
   # Use latest linux-zen kernel.
   boot.kernelPackages = pkgs.linuxPackages_zen;
@@ -152,11 +152,12 @@
                                     # by default.
     };
     windowManager.i3.enable = true;
+    xkb.options = "eurosign:e,caps:escape";
+
   };
 
   # Configure keymap, mouse and touchpad in X11.
   services = {
-    xserver.xkb.options = "eurosign:e,caps:escape";
     libinput = {
       mouse = {
         disableWhileTyping = true;
@@ -269,6 +270,8 @@
     pavucontrol
     wezterm
     gh
+    qbittorrent
+    xclip
     # Required for program.<name>.enable to work.
     iay mouse-actions
     # Required for Qt config.
