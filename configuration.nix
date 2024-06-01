@@ -211,7 +211,6 @@
       gh
       qbittorrent
       xclip
-      qutebrowser
 
       # Required for program.<name>.enable to work.
       iay
