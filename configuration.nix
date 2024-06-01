@@ -50,16 +50,31 @@
   # Qt configuration required for plugins on some packages to work.
   qt = {
     enable = true;
-    platformTheme = "qt5ct";
-    style = "adwaita-dark";
+    platformTheme = "gtk2";
+    style = "gtk2";
   };
 
   # XDG configuration.
-  xdg.terminal-exec = {
-    enable = true;
+  xdg = {
+    portal = {
+      enable = true;
 
-    # Look up how correct it is setting this to wezterm.desktop.
-    settings = { default = [ "wezterm.desktop" ]; };
+      # Pending changes post-nixos-rebuild; once portals.conf(5) is available.
+      config = { common = { default = [ "gtk" ]; }; };
+
+      # Set the portal implementation; consider 'shana' once the above is
+      # configured; ArchWiki mentions no screencast support.
+      extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+
+      # Hopefully solves the manpage-listed bugs before they even happen.
+      xdgOpenUsePortal = true;
+    };
+    terminal-exec = {
+      enable = true;
+
+      # Look up how correct it is setting this to wezterm.desktop.
+      settings = { default = [ "wezterm.desktop" ]; };
+    };
   };
 
   programs = {
@@ -94,7 +109,7 @@
 
 	# Quick note: the 'zpty' module mentioned in the manpage already comes
 	# packaged with zsh post release 3.1.
-        strategy = [ "completion" ];
+        strategy = [ "history" "completion" ];
       };
 
       # Enable really helpful framework around zsh.
@@ -201,10 +216,6 @@
 
       # Required for program.<name>.enable to work.
       iay
-
-      # Required for Qt config.
-      libsForQt5.qt5ct qt6Packages.qt6ct
-      adwaita-qt adwaita-qt6
 
       # Required for checking if hardware acceleration is running.
       clinfo vulkan-tools libva-utils
