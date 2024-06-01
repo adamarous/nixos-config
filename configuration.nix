@@ -42,332 +42,443 @@
 { config, lib, pkgs, ... }:
 
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+  ];
 
-  # Hardware and firmware management.
-  hardware = {
-    enableAllFirmware = true; # Disregard license control.
-    acpilight.enable = true; # Backlight control.
-    bluetooth.enable = true;
-    cpu.amd.updateMicrocode = true;
-    opengl = {
-      enable = true;
-      extraPackages = with pkgs; [ rocmPackages.clr.icd amdvlk libva ];
-    };
-  };
-
-  # Uptime monitoring.
-  services.tuptime.enable = true;
-
-  # Battery management.
-  services.upower.enable = true;
-
-  # Enable blueman as a Bluetooth manager.
-  services.blueman.enable = true;
-
-  # To automatically run
-  # $ nix-store --optimise
-  # and manage duplicates.
-  nix.settings.auto-optimise-store = true;
-
-  # AppImage support.
-  programs.appimage = {
-    enable = true;
-    binfmt = true; # Seamlessly run AppImage's through binfmt registration.
-  };
-
-  # Mount filesystems without requiring the user password.
-  programs.udevil.enable = true;
-
-  # This is for your own good, son (or daughter); basically setup a hosts
-  # blocklist to avoid brain damage.
-  networking.stevenblack = {
-    enable = true;
-    block = [ "fakenews" "gambling" "porn" "social" ];
-  };
-
-  # Use the systemd-boot EFI boot loader and configure it.
-  boot = {
-    loader = {
-      systemd-boot.enable = true;
-      efi.canTouchEfiVariables = true;
-      systemd-boot.consoleMode = "max"; # Change scaling for best screen fit.
-      systemd-boot.editor = false; # Disable root access through kernel parameter
-                                   # init=/bin/sh to enhance security.
-      timeout = 20; # Change time for auto-booting into pre-selected boot option;
-                    # "null" option for no time is broken as of 05/2024.
-    };
-    # Eye-candy for the boot process; hides initial status messages.
-    plymouth.enable = true;
-    # Check if plymouth font is any useful during boot; if so, try to shorten
-    # the line length to adhere to the 80 char. limit.
-    # plymouth.font = "${pkgs.jetbrains-mono}/share/fonts/truetype/JetBrainsMono-Bold.ttf";
-  };
-
-  # Use latest linux-zen kernel.
-  boot.kernelPackages = pkgs.linuxPackages_zen;
-
-  # If at any point the system crashes on boot, try this.
-  # boot.hardwareScan = false;
-
-  # Networking management.
-  networking.hostName = "dope"; # Define your hostname.
-  networking.networkmanager.enable = true; # Easy networking configuration.
-  networking.wireless.fallbackToWPA2 = false; # Enforce security by disabling
-                                              # downgrades to WPA2 on networks
-					      # mixing WPA2/WPA3 for compat.
-
-  # Location and timezone management.
-  services.automatic-timezoned.enable = true;
-  location.provider = "geoclue2";
-
-  # Set tty console config to follow X11 options and autologin.
-  console.useXkbConfig = true;
-  services.getty.autologinUser = "adam";
-
-  # Display manager service and sddm management.
-  services.displayManager = {
-    enable = true; # Might be a tad bit ambiguous because of sddm.enable
-                   # following, but it's false by default.
-    sddm = {
-      enable = true;
-      autoLogin.relogin = true; # Enables autologin even when you just logged
-                                # out but didn't reboot.
-    };
-    autoLogin = {
-      enable = true;
-      user = "adam";
-    };
-    defaultSession = "none+i3";
-  };
-
-  # X11 server management.
-  services.xserver = {
-    enable = true;
-    desktopManager = {
-      runXdgAutostartIfNone = true; # Because we use i3, XDG autostart isn't run
-                                    # by default.
-    };
-    windowManager.i3.enable = true;
-    xkb.options = "eurosign:e,caps:escape";
-
-  };
-
-  # Configure keymap, mouse and touchpad in X11.
-  services = {
-    libinput = {
-      mouse = {
-        disableWhileTyping = true;
-        middleEmulation = false; # Avoid transforming a simultaneous left and
-                                 # right click into a middle mouse button click.
-      };
-      touchpad = {
-        disableWhileTyping = true;
-      };
-    };
-  };
-  # Hide mouse when inactive.
-  services.unclutter-xfixes.enable = true;
-
-  # XDG configuration.
-  xdg.terminal-exec = {
-    enable = true;
-    settings = { default = [ "wezterm.desktop" ]; };
-  };
-
-  # Wallpaper eye-candy; generates a colorful wallpaper on login.
-  services.fractalart = {
-    enable = true;
-    height = 1080;
-    width = 1920;
-  };
-
-  # Enable CUPS to print documents.
-  services.printing.enable = true; # A WebUI is also served by default.
-  programs.system-config-printer.enable = true; # External GUI.
-
-  # Enable sound and Pipewire server.
-  sound = {
-    enable = true;
-    mediaKeys.enable = true;
-  };
-  services.pipewire = {
-    enable = true;
-    # Enable Pipewire as the primary sound server; any of the three options
-    # below will do.
-    alsa.enable = true;
-    jack.enable = true;
-    pulse.enable = true;
-  };
-  # Consider enabling the following if some Pulseaudio component requires it.
-  security.rtkit.enable = false;
-  # Look into fine-tuning configs for the following option if it doesn't work.
-  services.jack.loopback.enable = true; # Allow greater application support by
-                                        # using an ALSA loopback device instead
-					# of a PCM plugin.
-
-  # Configure main user and enforce declarativeness.
-  users.mutableUsers = false;
-  users.users.adam = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" "video" "networkmanager" ];
-    password = "me";
-  };
-
-  # Define zsh as global shell, define useful shell aliases and set global ENV
-  # variables.
-  environment = {
-    shells = [ pkgs.zsh ];
-    shellAliases = {
-      d = "date";
-    };
-    variables = {
-      VISUAL = "nvim";
-    };
-  };
-  users.defaultUserShell = pkgs.zsh;
-  programs.zsh = {
-    enable = true;
-    vteIntegration = true; # Preserve current directory of shell across
-                           # terminals.
-    syntaxHighlighting = {
-      enable = true;
-      # Consider setting this up by following the corresponding man page links.
-    };
-    autosuggestions = {
-      enable = true;
-      strategy = [ "history" ]; # Consider changing this to 'completion' after
-                              # researching about the 'zpty' module.
-    };
-    ohMyZsh = {
-      enable = true;
-      # Consider configuring the rest of the available OhMyZsh options.
-    };
-  };
-
-  # Qt configuration required for plugins on the bellow pkgs to work.
+  # Qt configuration required for plugins on some packages to work.
   qt = {
     enable = true;
     platformTheme = "qt5ct";
     style = "adwaita-dark";
   };
 
-  # Package management. To search for available packages, run:
-  # $ nix-env -qaP wget
-  nixpkgs.config.allowUnfree = true;
-  environment.systemPackages = with pkgs; [
-    rclone
-    wget
-    w3m
-    tree
-    dosfstools
-    clinfo
-    vulkan-tools
-    libva-utils
-    pavucontrol
-    wezterm
-    gh
-    qbittorrent
-    xclip
-    # Required for program.<name>.enable to work.
-    iay mouse-actions
-    # Required for Qt config.
-    libsForQt5.qt5ct qt6Packages.qt6ct
-    adwaita-qt adwaita-qt6
-  ];
-  fonts.packages = [ pkgs.jetbrains-mono ];
+  # XDG configuration.
+  xdg.terminal-exec = {
+    enable = true;
+
+    # Look up how correct it is setting this to wezterm.desktop.
+    settings = { default = [ "wezterm.desktop" ]; };
+  };
+
   programs = {
+    # AppImage support.
+    appimage = {
+      enable = true;
+
+      # Seamlessly run AppImage's through binfmt registration.
+      binfmt = true;
+    };
+
+    # Mount filesystems without requiring a user password.
+    udevil.enable = true;
+
+    # Enable a CUPS external GUI to the WebUI.
+    system-config-printer.enable = true;
+
+    # Zsh shell configuration.
+    zsh = {
+      enable = true;
+
+      # Preserve current directory across terminals.
+      vteIntegration = true;
+
+      syntaxHighlighting = {
+        enable = true;
+        # Consider setting this up by following the corresponding manpage links.
+      };
+
+      autosuggestions = {
+        enable = true;
+
+	# Quick note: the 'zpty' module mentioned in the manpage already comes
+	# packaged with zsh post release 3.1.
+        strategy = [ "completion" ];
+      };
+
+      # Enable really helpful framework around zsh.
+      ohMyZsh = {
+        enable = true;
+        # Consider configuring the rest of the available OhMyZsh options.
+      };
+    };
+
     # Browser.
     firefox = {
       enable = true;
       languagePacks = [ "en-US" ];
-      # Consider configuring the following:
-      policies = { }; # For more ergonomical/non-niche settings and extensions.
-      preferences = { }; # For changes in about:config.
+
+      # Consider configuring the following two:
+
+      # For more ergonomical/non-niche settings and extensions.
+      policies = { };
+
+      # For changes in about:config.
+      preferences = { };
     };
+
     # VCS.
     git = {
       enable = true;
-      config = [ ]; # Consider setting this config up.
-      prompt.enable = false; # Research into it.
+
+      # Consider setting this config up.
+      config = [ ];
+
+      # Research into it.
+      prompt.enable = false;
     };
+
     # System monitoring.
     atop = {
       enable = true;
-      atopRotateTimer.enable = true; # Daily timer for rotated results.
-      setuidWrapper.enable = true; # Required for root-level operations.
+
+      # Daily timer for rotated results.
+      atopRotateTimer.enable = true;
+
+      # Required for root-level operations.
+      setuidWrapper.enable = true;
+
       # The following two ensure in-depth, long-term analysis.
       atopService.enable = true;
       atopacctService.enable = true;
     };
-    # Command prompt.
+
+    # Simple command prompt.
     iay = {
       enable = true;
       minimalPrompt = true;
     };
+
     # Less pager command; works in tty even though default value is false.
     less.enable = true;
+
     # Desktop-independent keyboard brightness control; even in a tty.
     light = {
       enable = true;
       brightnessKeys.enable = true;
     };
-    # Corner mouse operation enabler.
-    mouse-actions.enable = true;
-    # Text editor.
+
+    # Text/Code editor.
     neovim = {
       enable = true;
-      configure = {
-        customRC =
-	''
-	set number
-	set colorcolumn=81
-	'';
-      };
-      defaultEditor = true; # Set EDITOR="nvim" to avoid setting it in the ENV
-                            # variables.
-      vimAlias = true; # Set 'nvim' to alias 'vi'.
+
+      # Neovim basic config; if plugins are wished for, check manpage.
+      configure.customRC = ''
+	                   set number
+	                   set colorcolumn=81
+                           set clipboard+=unnamedplus
+	                   '';
+
+      # Set EDITOR="nvim" to avoid setting it in the ENV variables.
+      defaultEditor = true;
+
+      # Set 'nvim' to alias 'vi'.
+      viAlias = true;
     };
+
+    # This is a, UI-wise, richer alternative to 'ping'.
+    mtr.enable = true;
   };
 
-  # Font management.
+  # Environment configuration; shell, ENV variables and system packages.
+  environment = {
+    # Set zsh as only allowed user account shell.
+    shells = [ pkgs.zsh ];
+
+    shellAliases = {
+      # Useful outside a display server without a date indicator.
+      d = "date";
+    };
+
+    # Declarative, user-independent ENV variables.
+    variables = {
+      # Compliments the EDITOR environment variable set in
+      # programs.neovim.defaultEditor.
+      VISUAL = "nvim";
+    };
+
+    # Package management. To search for available packages, run:
+    # $ nix-env -qaP wget
+    systemPackages = with pkgs; [
+      rclone
+      wget
+      w3m
+      tree
+      dosfstools
+      pavucontrol
+      wezterm
+      gh
+      qbittorrent
+      xclip
+      qutebrowser
+
+      # Required for program.<name>.enable to work.
+      iay
+
+      # Required for Qt config.
+      libsForQt5.qt5ct qt6Packages.qt6ct
+      adwaita-qt adwaita-qt6
+
+      # Required for checking if hardware acceleration is running.
+      clinfo vulkan-tools libva-utils
+    ];
+  };
+
+  # Sound management.
+  sound = {
+    enable = true;
+    mediaKeys.enable = true;
+  };
+
+  # Networking management.
+  networking = {
+    # Set up a hosts blocklist to avoid brain damage.
+    stevenblack = {
+      enable = true;
+      block = [ "fakenews" "gambling" "porn" "social" ];
+    };
+
+    # Define your hostname; the domain is already set by DHCPCD.
+    hostName = "dope";
+
+    # Easy networking configuration.
+    networkmanager.enable = true;
+
+    # Enforce security by disabling downgrades to WPA2 on networks mixing
+    # WPA2/WPA3 for compatibility.
+    wireless.fallbackToWPA2 = false;
+
+    # Disable firewall.
+    firewall.enable = false;
+  };
+
+  # Font management; defaults and packages.
   fonts = {
+    # Enable some (hopefully good) unicode coverage.
     enableDefaultPackages = true;
     enableGhostscriptFonts = true;
+
     fontconfig = {
+      # Set up monospaced power.
       defaultFonts = {
-        monospace = [ "JetBrainsMono Bold" ];
-        sansSerif = [ "JetBrainsMono Bold" ];
-        serif = [ "JetBrainsMono Bold" ];
+        monospace = [ "JetBrains Mono Bold" ];
+        sansSerif = [ "JetBrains Mono Bold" ];
+        serif = [ "JetBrains Mono Bold" ];
       };
-      includeUserConf = false; # Enforce declarativeness by disabling user
-                               # config files.
-      subpixel.rgba = "rgb"; # Default used by most monitors.
+
+      # Enforce declarativeness by disabling user config files.
+      includeUserConf = false;
+
+      # Default used by most monitors.
+      subpixel.rgba = "rgb";
+    };
+
+    packages = [ pkgs.jetbrains-mono ];
+  };
+
+  # User settings management.
+  users = {
+    # Enforce declarativeness.
+    mutableUsers = false;
+
+    # Set default shell for all users to zsh; it's the only on enabled but
+    # /bin/sh is active by default so it's worth setting everything to zsh.
+    defaultUserShell = pkgs.zsh;
+
+    # Configure main user.
+    users.adam = {
+      # Automatically add the user to 'users' group, create a home directory,
+      # and use the default set user shell.
+      isNormalUser = true;
+
+      # 'video' group required for hardware.acpilight.enable brightness control.
+      extraGroups = [ "wheel" "video" "networkmanager" ];
+
+      # Dumb, but it works on a local level (my level).
+      password = "me";
     };
   };
 
-  # Some programs need SUID wrappers, can be configured further or are started
-  # in user sessions.
-  programs.mtr.enable = true;
-  programs.gnupg.agent = {
-    enable = true;
-    enableSSHSupport = true;
+  services = {
+    # Uptime monitoring.
+    tuptime.enable = true;
+
+    # Battery management.
+    upower.enable = true;
+
+    # Enable blueman as a Bluetooth manager.
+    blueman.enable = true;
+
+    # Set the timezone automatically.
+    automatic-timezoned.enable = true;
+
+    # Enable autologin in ttys.
+    getty.autologinUser = "adam";
+
+    # Display manager and sddm management.
+    displayManager = {
+      # Might be a tad bit ambiguous because of sddm.enable following, but it's
+      # false by default.
+      enable = true;
+
+      # Enable autologin just because.
+      autoLogin = {
+        enable = true;
+        user = "adam";
+      };
+
+      # Enable sddm over NixOS' default lightdm.
+      sddm = {
+        enable = true;
+
+        # Enables autologin even when you just logged out but didn't reboot.
+        autoLogin.relogin = true;
+      };
+
+      # Set the default session to only consider a window manager.
+      defaultSession = "none+i3";
+    };
+
+    # X11 server management.
+    xserver = {
+      enable = true;
+
+      # Because we use i3, XDG autostart isn't run by default.
+      desktopManager.runXdgAutostartIfNone = true;
+
+      # Use i3wm; for configuring it, look into the manpage.
+      windowManager.i3.enable = true;
+
+      # Set a few useful commands; look into getting shift + caps to enable all
+      # caps or simply look into the syntax (not in the manpage).
+      xkb.options = "eurosign:e,caps:escape";
+    };
+
+    # Configure mouse and touchpad in X11.
+    libinput = {
+      touchpad.disableWhileTyping = true;
+
+      mouse = {
+        disableWhileTyping = true;
+
+        # Avoid transforming a simultaneous left and right click into a middle
+	# mouse button click.
+        middleEmulation = false;
+      };
+    };
+
+    # Hide mouse when inactive.
+    unclutter-xfixes.enable = true;
+
+    # Wallpaper eye-candy; generates a colorful wallpaper on login.
+    fractalart = {
+      enable = true;
+      height = 1080;
+      width = 1920;
+    };
+
+    # Enable printing.
+    printing.enable = true; # A WebUI is served by default at localhost:631.
+
+    # Enable Pipewire sound server.
+    pipewire = {
+      enable = true;
+
+      # Enable Pipewire as the primary sound server; any of the three options
+      # below will do.
+      alsa.enable = true;
+      jack.enable = true;
+      pulse.enable = true;
+    };
+
+    # Allow greater application support by using an ALSA loopback device instead
+    # of a PCM plugin.
+    jack.loopback.enable = true;
   };
 
-  # Disable firewall.
-  networking.firewall.enable = false;
+  # Hardware and firmware management.
+  hardware = {
+    # Disregard license control.
+    enableAllFirmware = true;
+
+    # Backlight control.
+    acpilight.enable = true;
+
+    # This seems to also set up bluetooth service control; look into it.
+    bluetooth.enable = true;
+
+    # Update microcode for my current CPU manufacturer.
+    cpu.amd.updateMicrocode = true;
+
+    opengl = {
+      enable = true;
+
+      # Install packages required for AMD hardware acceleration.
+      extraPackages = with pkgs; [ rocmPackages.clr.icd amdvlk libva ];
+    };
+  };
+
+  # Set tty console config to follow X11 keyboard options.
+  console.useXkbConfig = true;
+
+  # Location provider management.
+  location.provider = "geoclue2";
+
+  # Boot process management.
+  boot = {
+    loader = {
+      # Use the systemd-boot EFI boot loader.
+      systemd-boot.enable = true;
+      efi.canTouchEfiVariables = true;
+
+      # Change scaling for best screen fit.
+      systemd-boot.consoleMode = "max";
+
+      # Disable root access through kernel parameter init=/bin/sh to enhance
+      # security.
+      systemd-boot.editor = false;
+
+      # Change time for auto-booting into pre-selected boot option; "null"
+      # option for no time is broken as of 05/2024.
+      timeout = 20;
+    };
+
+    # Eye-candy for the boot process; hides initial boot status messages.
+    plymouth.enable = true;
+
+    # Use latest linux-zen kernel.
+    kernelPackages = pkgs.linuxPackages_zen;
+
+    # If at any point the system crashes on boot, try this.
+    # hardwareScan = false;
+  };
+
+  # To automatically run
+  # $ nix-store --optimise
+  # and manage duplicates.
+  nix.settings.auto-optimise-store = true;
+
+  # To allow unfree package derivations.
+  nixpkgs.config.allowUnfree = true;
+
+  # To acquire real-time priority for the Pulseaudio sound server.
+  security.rtkit.enable = true;
 
   # System management.
   system = {
     autoUpgrade = {
       enable = true;
+
+      # If editing the config and the system updates, better finish editing it
+      # or else it might load up a new gen on boot that could be broken from
+      # your unfinished changes but be 'nicely' updated.
       operation = "boot";
     };
-    copySystemConfiguration = true; # Copied to
-                                    # /run/current-system/configuration.nix.
+
+    # Copies the system config to /run/current-system/configuration.nix.
+    copySystemConfiguration = true;
+
     stateVersion = "24.11"; # Don't touch this.
   };
 }
