@@ -104,20 +104,6 @@
       };
     };
 
-    # Browser.
-    firefox = {
-      enable = true;
-      languagePacks = [ "en-US" ];
-
-      # Consider configuring the following two:
-
-      # For more ergonomical/non-niche settings and extensions.
-      policies = { };
-
-      # For changes in about:config.
-      preferences = { };
-    };
-
     # VCS.
     git = {
       enable = true;
@@ -211,6 +197,7 @@
       gh
       qbittorrent
       xclip
+      qutebrowser
 
       # Required for program.<name>.enable to work.
       iay
