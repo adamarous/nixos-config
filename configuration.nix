@@ -1,5 +1,3 @@
-# We left it at looking into the terminal-exec stuff.
-
 # Todo list:
 # Check messages scattered throughout the config for post-config tweaking.
 # Consider setting up networking.networkmanager.ensureProfiles.profiles as well
@@ -75,9 +73,10 @@
     terminal-exec = {
       enable = true;
 
-      # Look up how correct it is setting this to wezterm.desktop.
-      settings = { "none+i3" = [ "wezterm.desktop" ];
-                   default = [ "wezterm.desktop" ]; };
+      # Set terminal to be used for both $XDG_CURRENT_DESKTOP and the default
+      # fallback.
+      settings = { "none+i3" = [ "org.wezfurlong.wezterm.desktop" ];
+                   default = [ "org.wezfurlong.wezterm.desktop" ]; };
     };
   };
 
