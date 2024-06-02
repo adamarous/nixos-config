@@ -1,3 +1,5 @@
+# We left it at looking into the terminal-exec stuff.
+
 # Todo list:
 # Check messages scattered throughout the config for post-config tweaking.
 # Consider setting up networking.networkmanager.ensureProfiles.profiles as well
@@ -31,13 +33,14 @@
 # out events or we've got to poll for battery levels.
 # Look into services.xfs.enable for managing X11 fonts.
 # Look into how OK is it to set time.hardwareClockInLocalTime.
-# Look into xdg.portal.enable and how beneficial it might be for us.
 # MediaKeys for volume control don't work, but brightness control keys do.
 # WiFi might be interfering with the bluetooth audio channel because they likely
 # use the same hardware card, but do look into the issue of random stuttering.
 # The fontconfig seems not to be working on Firefox.
 # Set up home-manager for managing home directory configs like i3; don't
 # configure them just yet.
+# Set up Firefox as a second-in-command browser for media consumption (uBo is a
+# better ad-blocker than qutebrowser's.)
 
 { config, lib, pkgs, ... }:
 
@@ -56,24 +59,25 @@
 
   # XDG configuration.
   xdg = {
+    # Desktop portal settings.
     portal = {
       enable = true;
 
-      # Pending changes post-nixos-rebuild; once portals.conf(5) is available.
+      # All-out GTK-styled integration.
       config = { common = { default = [ "gtk" ]; }; };
-
-      # Set the portal implementation; consider 'shana' once the above is
-      # configured; ArchWiki mentions no screencast support.
       extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
 
       # Hopefully solves the manpage-listed bugs before they even happen.
       xdgOpenUsePortal = true;
     };
+
+    # To open terminal programs (ranger) into e.g. file picker windows.
     terminal-exec = {
       enable = true;
 
       # Look up how correct it is setting this to wezterm.desktop.
-      settings = { default = [ "wezterm.desktop" ]; };
+      settings = { "none+i3" = [ "wezterm.desktop" ];
+                   default = [ "wezterm.desktop" ]; };
     };
   };
 
@@ -279,7 +283,7 @@
     # Enforce declarativeness.
     mutableUsers = false;
 
-    # Set default shell for all users to zsh; it's the only on enabled but
+    # Set default shell for all users to zsh; it's the only one enabled but
     # /bin/sh is active by default so it's worth setting everything to zsh.
     defaultUserShell = pkgs.zsh;
 
