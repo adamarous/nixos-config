@@ -1,19 +1,4 @@
 # Todo list:
-# Consider setting up networking.networkmanager.ensureProfiles.profiles as well
-# as networking.networkmanager.settings to further enforce declarativeness.
-# Research into networking.wireless options and the extent of their effect when
-# using networkManager; e.g. networking.wireless.scanOnLowSignal.
-# Set up nix.settings.max-jobs once you look into the specific value for it.
-# Look into generating extra docs for other packages, under
-# documentation.nixos.includeAllModules.
-# Look into how does programs.<name>.enable syntax work along with pkgs.<name>
-# for installation; some (e.g. iay) need both to work while others (e.g. git)
-# seem to work simply with the former.
-# See into 'sudo-rs' as a memory-safe alternative to 'sudo'.
-# See into service.acpid.enable and its relationship with
-# hardware.acpilight.enable.
-# Consider enabling either one of service.clipcat or service.clipmenu.
-# Look into the implications of enabling or disabling services.homed.
 # Look into enabling kmscon and configuring it as a replacement for tty, even
 # after having a display manager set up.
 # See into the difference between the powerKey and the hibernateKey to configure
@@ -108,7 +93,7 @@
       syntaxHighlighting = {
         enable = true;
 
-        # Enable the base, default highlighter and all the rest.
+        # Enable all highlighters.
         highlighters = [
 	  "main"
 	  "brackets" # Matches brackets and parenthesis.
@@ -172,7 +157,8 @@
       atopacctService.enable = true;
     };
 
-    # Simple command prompt.
+    # Simple command prompt; needs to be included in systemPackages because the
+    # source doesn't include it by default.
     iay = {
       enable = true;
       minimalPrompt = true;
@@ -180,12 +166,6 @@
 
     # Less pager command; works in tty even though default value is false.
     less.enable = true;
-
-    # Desktop-independent keyboard brightness control; even in a tty.
-    light = {
-      enable = true;
-      brightnessKeys.enable = true;
-    };
 
     # Text/Code editor.
     neovim = {
@@ -196,6 +176,8 @@
         set number
         set colorcolumn=81
         set clipboard+=unnamedplus
+	set ignorecase
+	set smartcase
       '';
 
       # Set EDITOR="nvim" to avoid setting the ENV variable.
@@ -220,11 +202,15 @@
       d = "date";
 
       # Quick system administration.
-      s = "sudo nixos-rebuild boot";
+      sc = "sudoedit /etc/nixos/configuration.nix";
+      sb = "sudo nixos-rebuild boot";
       c = ''
         cd /home/adam/nixos-config && \
         cp /etc/nixos/configuration.nix . && gwip && gp && cd -
       '';
+
+      # Firefox second-in-command (media consumption)
+      f = "nix-shell -p firefox --command firefox";
     };
 
     # Declarative, user-independent ENV variables.
@@ -280,10 +266,6 @@
 
     # Easy networking configuration.
     networkmanager.enable = true;
-
-    # Enforce security by disabling downgrades to WPA2 on networks mixing
-    # WPA2/WPA3 for compatibility.
-    wireless.fallbackToWPA2 = false;
 
     # Disable firewall.
     firewall.enable = false;
@@ -438,9 +420,6 @@
     # Disregard license control.
     enableAllFirmware = true;
 
-    # Backlight control.
-    acpilight.enable = true;
-
     # Set up bluetooth service control.
     bluetooth.enable = true;
 
@@ -490,10 +469,15 @@
     # hardwareScan = false;
   };
 
-  # To automatically run
-  # $ nix-store --optimise
-  # and manage duplicates.
-  nix.settings.auto-optimise-store = true;
+  nix.settings = {
+    # To automatically run
+    # $ nix-store --optimise
+    # and manage duplicates.
+    auto-optimise-store = true;
+
+    # Set max concurrent jobs for my current machine; lscpu and look for CPU(s).
+    max-jobs = 4;
+  };
 
   # To allow unfree package derivations.
   nixpkgs.config.allowUnfree = true;
