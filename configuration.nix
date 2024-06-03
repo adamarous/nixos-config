@@ -1,6 +1,4 @@
 # Todo list:
-# Look into enabling kmscon and configuring it as a replacement for tty, even
-# after having a display manager set up.
 # See into the difference between the powerKey and the hibernateKey to configure
 # different behaviours in services.logind.
 # Consider researching about services.picom as a composite server for X11.
@@ -208,6 +206,10 @@
         cd /home/adam/nixos-config && \
         cp /etc/nixos/configuration.nix . && gwip && gp && cd -
       '';
+      cs = ''
+        cd /home/adam/nixos-config && cp /etc/nixos/configuration.nix . && \
+        gst && cd -
+      '';
 
       # Firefox second-in-command (media consumption)
       f = "nix-shell -p firefox --command firefox";
@@ -319,20 +321,28 @@
   };
 
   services = {
-    # Uptime monitoring.
-    tuptime.enable = true;
-
-    # Battery management.
-    upower.enable = true;
-
     # Enable blueman as a Bluetooth manager.
     blueman.enable = true;
 
     # Set the timezone automatically.
     automatic-timezoned.enable = true;
 
-    # Enable autologin in tty.
-    getty.autologinUser = "adam";
+    # kmscon; a virtual console replacement for gettys.
+    kmscon = {
+      enable = true;
+
+      # Autlogin main user.
+      autologinUser = "adam";
+
+      # Enable custom font.
+      fonts = [ {
+        name = "JetBrains Mono Bold";
+        package = pkgs.jetbrains-mono;
+      } ];
+
+      # Use hardware acceleration if supported.
+      hwRender = true;
+    };
 
     # Display manager and sddm management.
     displayManager = {
@@ -434,8 +444,14 @@
     };
   };
 
-  # Set tty console config to follow X11 keyboard options.
-  console.useXkbConfig = true;
+  # Set virtual console config.
+  console = {
+    # Set up console options during initrd.
+    earlySetup = true;
+
+    # Follow X11 keyboard options.
+    useXkbConfig = true;
+  };
 
   # Location provider management.
   location.provider = "geoclue2";
