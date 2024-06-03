@@ -378,6 +378,14 @@
       # Because we use i3, XDG autostart isn't run by default.
       desktopManager.runXdgAutostartIfNone = true;
 
+      # Set off all screen off events.
+      serverFlagsSection = ''
+        Option "BlankTime" "0"
+	Option "StandbyTime" "0"
+	Option "SuspendTime" "0"
+	Option "OffTime" "0"
+      '';
+
       # Set a few useful commands; caps goes to escape and shitf + caps to caps
       # lock.
       xkb.options = "eurosign:e,caps:escape_shifted_capslock";
