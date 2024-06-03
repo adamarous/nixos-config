@@ -1,5 +1,4 @@
 # Todo list:
-# Check messages scattered throughout the config for post-config tweaking.
 # Consider setting up networking.networkmanager.ensureProfiles.profiles as well
 # as networking.networkmanager.settings to further enforce declarativeness.
 # Research into networking.wireless options and the extent of their effect when
@@ -39,6 +38,8 @@
 # configure them just yet.
 # Set up Firefox as a second-in-command browser for media consumption (uBo is a
 # better ad-blocker than qutebrowser's.)
+# Solve screen-tearing problem in X11.
+# Look into 'lesspager' error output.
 
 { config, lib, pkgs, ... }:
 
@@ -65,7 +66,7 @@
       config = { common = { default = [ "gtk" ]; }; };
       extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
 
-      # Hopefully solves the manpage-listed bugs before they even happen.
+      # Hopefully solves the bugs mentioned in the manpage.
       xdgOpenUsePortal = true;
     };
 
@@ -75,8 +76,10 @@
 
       # Set terminal to be used for both $XDG_CURRENT_DESKTOP and the default
       # fallback.
-      settings = { "none+i3" = [ "org.wezfurlong.wezterm.desktop" ];
-                   default = [ "org.wezfurlong.wezterm.desktop" ]; };
+      settings = {
+        "none+i3" = [ "org.wezfurlong.wezterm.desktop" ];
+        default = [ "org.wezfurlong.wezterm.desktop" ];
+      };
     };
   };
 
@@ -104,7 +107,17 @@
 
       syntaxHighlighting = {
         enable = true;
-        # Consider setting this up by following the corresponding manpage links.
+
+        # Enable the base, default highlighter and all the rest.
+        highlighters = [
+	  "main"
+	  "brackets" # Matches brackets and parenthesis.
+          "pattern" # Matches user-defined patterns.
+	  "regexp" # Matches user-defined regular expressions.
+	  "cursor" # Matches the cursor position.
+          "root" # Highlights the whole command-line when root.
+          "line" # Applied to the whole command line.
+        ];
       };
 
       autosuggestions = {
@@ -115,23 +128,34 @@
         strategy = [ "history" "completion" ];
       };
 
-      # Enable really helpful framework around zsh.
+      # Enable ohMyZsh.
       ohMyZsh = {
         enable = true;
-        # Consider configuring the rest of the available OhMyZsh options.
+
+        plugins = [
+	  "copypath" # Copy absolute current directory path.
+	  "aliases" # Provide a list of configured aliases for commands.
+          "colored-man-pages" # Colorize manpages.
+	  "colorize" # Colorize 'ccat' (not cat) output syntax.
+	  "gitignore" # Provide direct .gitignore template downloads; to use:
+	              # gi [TEMPLATENAME] >> .gitignore
+	  "git" # Provide useful git aliases; the most useful to us:
+	        # - gaa; git add --all
+	        # - gwip; temp wip commit and a few other useful things
+	        # - gcmsg; git commit -m
+	        # - gd; git diff
+	        # - gf; git fetch
+	        # - glgga; git log with a nice graph
+	        # - gprom; git pull rebase origin master
+	        # - gp; git push
+	        # - gpsup; git push --set-upstream origin master
+	        # - gst; git status
+        ];
       };
     };
 
     # VCS.
-    git = {
-      enable = true;
-
-      # Consider setting this config up.
-      config = [ ];
-
-      # Research into it.
-      prompt.enable = false;
-    };
+    git.enable = true;
 
     # System monitoring.
     atop = {
@@ -169,16 +193,17 @@
 
       # Neovim basic config; if plugins are wished for, check manpage.
       configure.customRC = ''
-	                   set number
-	                   set colorcolumn=81
-                           set clipboard+=unnamedplus
-	                   '';
+        set number
+        set colorcolumn=81
+        set clipboard+=unnamedplus
+      '';
 
-      # Set EDITOR="nvim" to avoid setting it in the ENV variables.
+      # Set EDITOR="nvim" to avoid setting the ENV variable.
       defaultEditor = true;
 
-      # Set 'nvim' to alias 'vi'.
+      # Set 'nvim' to alias 'vi' and 'vim'.
       viAlias = true;
+      vimAlias = true;
     };
 
     # This is a, UI-wise, richer alternative to 'ping'.
@@ -187,12 +212,19 @@
 
   # Environment configuration; shell, ENV variables and system packages.
   environment = {
-    # Set zsh as only allowed user account shell.
+    # Set zsh as the only allowed user account shell.
     shells = [ pkgs.zsh ];
 
     shellAliases = {
       # Useful outside a display server without a date indicator.
       d = "date";
+
+      # Quick system administration.
+      s = "sudo nixos-rebuild boot";
+      c = ''
+        cd /home/adam/nixos-config && \
+        cp /etc/nixos/configuration.nix . && gwip && cd -
+      '';
     };
 
     # Declarative, user-independent ENV variables.
@@ -206,6 +238,7 @@
     # $ nix-env -qaP wget
     systemPackages = with pkgs; [
       rclone
+      python3
       wget
       w3m
       tree
@@ -216,6 +249,9 @@
       qbittorrent
       xclip
       qutebrowser
+
+      # Required for 'colorize' ohMyZsh plugin to work.
+      chroma
 
       # Required for program.<name>.enable to work.
       iay
@@ -295,7 +331,7 @@
       # 'video' group required for hardware.acpilight.enable brightness control.
       extraGroups = [ "wheel" "video" "networkmanager" ];
 
-      # Dumb, but it works on a local level (my level).
+      # Dumb, but it works on a local level (my current level).
       password = "me";
     };
   };
@@ -313,7 +349,7 @@
     # Set the timezone automatically.
     automatic-timezoned.enable = true;
 
-    # Enable autologin in ttys.
+    # Enable autologin in tty.
     getty.autologinUser = "adam";
 
     # Display manager and sddm management.
@@ -336,7 +372,7 @@
         autoLogin.relogin = true;
       };
 
-      # Set the default session to only consider a window manager.
+      # Set the default session to only consider a window manager and no DE.
       defaultSession = "none+i3";
     };
 
@@ -344,15 +380,15 @@
     xserver = {
       enable = true;
 
+      # Use i3wm.
+      windowManager.i3.enable = true;
+
       # Because we use i3, XDG autostart isn't run by default.
       desktopManager.runXdgAutostartIfNone = true;
 
-      # Use i3wm; for configuring it, look into the manpage.
-      windowManager.i3.enable = true;
-
-      # Set a few useful commands; look into getting shift + caps to enable all
-      # caps or simply look into the syntax (not in the manpage).
-      xkb.options = "eurosign:e,caps:escape";
+      # Set a few useful commands; caps goes to escape and shitf + caps to caps
+      # lock.
+      xkb.options = "eurosign:e,caps:escape_shifted_capslock";
     };
 
     # Configure mouse and touchpad in X11.
@@ -371,7 +407,7 @@
     # Hide mouse when inactive.
     unclutter-xfixes.enable = true;
 
-    # Wallpaper eye-candy; generates a colorful wallpaper on login.
+    # Wallpaper eye-candy; generates a colorful wallpaper on log in.
     fractalart = {
       enable = true;
       height = 1080;
@@ -405,7 +441,7 @@
     # Backlight control.
     acpilight.enable = true;
 
-    # This seems to also set up bluetooth service control; look into it.
+    # Set up bluetooth service control.
     bluetooth.enable = true;
 
     # Update microcode for my current CPU manufacturer.
