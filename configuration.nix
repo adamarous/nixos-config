@@ -1,6 +1,4 @@
 # Todo list:
-# See into the difference between the powerKey and the hibernateKey to configure
-# different behaviours in services.logind.
 # Consider researching about services.picom as a composite server for X11.
 # Consider researching about the implications of enabling all three server
 # emulators with PipeWire and the possible conflicts that might cause.
@@ -23,6 +21,7 @@
 # better ad-blocker than qutebrowser's.)
 # Solve screen-tearing problem in X11.
 # Look into 'lesspager' error output.
+# Look into man xorg.conf for configuring xserver options.
 
 { config, lib, pkgs, ... }:
 
@@ -210,9 +209,10 @@
         cd /home/adam/nixos-config && cp /etc/nixos/configuration.nix . && \
         gst && cd -
       '';
+      cgd = "cd /home/adam/nixos-config && gd && cd -";
 
       # Firefox second-in-command (media consumption)
-      f = "nix-shell -p firefox --command firefox";
+      f = "(nix-shell -p firefox --command firefox &) ; exit";
     };
 
     # Declarative, user-independent ENV variables.
@@ -389,6 +389,12 @@
       # Set a few useful commands; caps goes to escape and shitf + caps to caps
       # lock.
       xkb.options = "eurosign:e,caps:escape_shifted_capslock";
+    };
+
+    # Configure picom compositor.
+    picom = {
+      enable = true;
+      vSync = true;
     };
 
     # Configure mouse and touchpad in X11.
