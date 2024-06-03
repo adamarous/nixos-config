@@ -1,16 +1,4 @@
 # Todo list:
-# Consider researching about services.picom as a composite server for X11.
-# Consider researching about the implications of enabling all three server
-# emulators with PipeWire and the possible conflicts that might cause.
-# Look into services.printing.cups-pdf.enable and how useful it could be for us.
-# Look into how OK it is to activate services.systembus-notify.
-# Look into using services.udisks2 for removable media management.
-# Look into services.upower.enableWattsUpPro to see whether it's beneficial for
-# us or not.
-# Look into services.upower.noPollBatteries to see whether our hardware sends
-# out events or we've got to poll for battery levels.
-# Look into services.xfs.enable for managing X11 fonts.
-# Look into how OK is it to set time.hardwareClockInLocalTime.
 # MediaKeys for volume control don't work, but brightness control keys do.
 # WiFi might be interfering with the bluetooth audio channel because they likely
 # use the same hardware card, but do look into the issue of random stuttering.
@@ -18,8 +6,8 @@
 # Set up home-manager for managing home directory configs like i3; don't
 # configure them just yet.
 # Set up Firefox as a second-in-command browser for media consumption (uBo is a
-# better ad-blocker than qutebrowser's.)
-# Solve screen-tearing problem in X11.
+# better ad-blocker than qutebrowser's); the command is set, only things left
+# are home directory cleaning and program.firefox config.
 # Look into 'lesspager' error output.
 # Look into man xorg.conf for configuring xserver options.
 
@@ -76,6 +64,14 @@
 
     # Mount filesystems without requiring a user password.
     udevil.enable = true;
+
+    # Desktop-independent, vt-integrated backlight control.
+    light = {
+      enable = true;
+
+      # Enable keyboard keys to change backlight control.
+      brightnessKeys.enable = true;
+    };
 
     # Enable a CUPS external GUI to the WebUI.
     system-config-printer.enable = true;
@@ -242,7 +238,7 @@
       chroma
 
       # Required for program.<name>.enable to work.
-      iay
+      iay udevil
 
       # Required for checking if hardware acceleration is running.
       clinfo vulkan-tools libva-utils
@@ -321,6 +317,17 @@
   };
 
   services = {
+    # Enable udisks daemon for udevil wrapper; programs.udevil.
+    udisks2 = {
+      enable = true;
+
+      # Mount on /media instead of the default location /run/media/$USER.
+      mountOnMedia = true;
+    };
+
+    # Notification daemon.
+    systembus-notify.enable = true;
+
     # Enable blueman as a Bluetooth manager.
     blueman.enable = true;
 
@@ -394,6 +401,8 @@
     # Configure picom compositor.
     picom = {
       enable = true;
+
+      # This solves X11's screen tearing issues.
       vSync = true;
     };
 
@@ -421,7 +430,12 @@
     };
 
     # Enable printing.
-    printing.enable = true; # A WebUI is served by default at localhost:631.
+    printing = {
+      enable = true; # A WebUI is served by default at localhost:631.
+
+      # This prevents 'client-error-document-format-not-supported'.
+      cups-pdf.enable = true;
+    };
 
     # Enable Pipewire sound server.
     pipewire = {
@@ -512,8 +526,14 @@
   # To allow unfree package derivations.
   nixpkgs.config.allowUnfree = true;
 
-  # To acquire real-time priority for the Pulseaudio sound server.
-  security.rtkit.enable = true;
+  # Process-dependent security management.
+  security = {
+    # To acquire real-time priority for the Pulseaudio sound server.
+    rtkit.enable = true;
+
+    # Required for services.udisks2 to work.
+    polkit.enable = true;
+  };
 
   # System management.
   system = {
