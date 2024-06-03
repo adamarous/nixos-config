@@ -223,7 +223,7 @@
       s = "sudo nixos-rebuild boot";
       c = ''
         cd /home/adam/nixos-config && \
-        cp /etc/nixos/configuration.nix . && gwip && cd -
+        cp /etc/nixos/configuration.nix . && gwip && gp && cd -
       '';
     };
 
