@@ -1,15 +1,31 @@
+# During your time outside (day 1), you were viewing the xorg.conf options in Workspace
+# 2; careful with the warning at the end of this file's todo list.
+
+# During your time outside (day 2): 
+# - A solution was implemented for the mediaKeys problem but is pending testing.
+# - The bluetooth stuttering issues still happen using a phone hotspot
+#   connection but the issue with the WiFi connection stutters is likely still
+#   present without any bluetooth connection active, but maybe it's bluetooth
+#   altogether that need to be disabled; pending testing.
+
 # Todo list:
-# MediaKeys for volume control don't work, but brightness control keys do.
+# mediaKeys for volume control don't work; they're wrongly set by actkbd so
+# instead of activating them through the mediaKeys.enable setting, you instead
+# set actkbd.enable and actkbd.bindings with the same implementation as the one
+# in source but the keys changed, seeing as that's the only thing that happens
+# when sound.mediaKeys are enabled.
 # WiFi might be interfering with the bluetooth audio channel because they likely
 # use the same hardware card, but do look into the issue of random stuttering.
-# The fontconfig seems not to be working on Firefox.
-# Set up home-manager for managing home directory configs like i3; don't
-# configure them just yet.
 # Set up Firefox as a second-in-command browser for media consumption (uBo is a
 # better ad-blocker than qutebrowser's); the command is set, only things left
-# are home directory cleaning and program.firefox config.
-# Look into 'lesspager' error output.
-# Look into man xorg.conf for configuring xserver options.
+# are home directory cleaning and program.firefox config (including fonts).
+# Look into lesspager's error output.
+# Look into man xorg.conf for configuring xserver options; there are some that
+# are repeated from the xorg.conf file in specific NixOS parameters, so careful
+# not to set them up twice.
+# Set up zathura for PDF viewing.
+# Set up home-manager for managing home directory configs like i3; don't
+# configure them just yet.
 
 { config, lib, pkgs, ... }:
 
@@ -245,11 +261,8 @@
     ];
   };
 
-  # Sound management.
-  sound = {
-    enable = true;
-    mediaKeys.enable = true;
-  };
+  # Sound management; mediaKeys left for manual config with services.actkbd.
+  sound.enable = true;
 
   # Networking management.
   networking = {
@@ -325,11 +338,41 @@
       mountOnMedia = true;
     };
 
+    # Enable actkbd bindings for sound.mediaKeys; though don't enable the
+    # mediaKeys themselves, only the implementation in
+    # services/audio/alsa.nix.
+    atckbd = {
+      # Because we only need the bindings but these do not enable actkbd by
+      # default in the implementation, it's enabled here.
+      enable = true;
+
+      # The keycodes in actkbd are not the same as the ones in pkgs.xorg.xev;
+      # more info at https://wiki.nixos.org/wiki/Actkbd.
+      bindings = [
+        # Mute volume actkbd keycode in current keyboard.
+        { keys = [ 221 ]; events = [ "key" ]; command = ''
+          ${alsa-utils}/bin/amixer -q set Master toggle
+        ''; }
+      
+        # Lower volume actkbd keycode in current keyboard.
+        { keys = [ 222 ]; events = [ "key" "rep" ]; command = ''
+          ${alsa-utils}/bin/amixer -q set Master \
+          ${config.sound.mediaKeys.volumeStep}- unmute
+        ''; }
+          
+        # Raise volume actkbd keycode in current keyboard.
+        { keys = [ 223 ]; events = [ "key" "rep" ]; command = ''
+          ${alsa-utils}/bin/amixer -q set Master \
+          ${config.sound.mediaKeys.volumeStep}+ unmute
+        ''; }
+  
+        # Mic mute key was left unconfigured because there was none in my
+        # current keyboard.
+      ];
+    };
+
     # Notification daemon.
     systembus-notify.enable = true;
-
-    # Enable blueman as a Bluetooth manager.
-    blueman.enable = true;
 
     # Set the timezone automatically.
     automatic-timezoned.enable = true;
