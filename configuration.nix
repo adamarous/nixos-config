@@ -365,13 +365,13 @@
         # Lower volume keycode in current keyboard.
         { keys = [ 222 ]; events = [ "key" "rep" ]; command = ''
           ${pkgs.alsa-utils}/bin/amixer -q set Master \
-          ${sound.mediaKeys.volumeStep}- unmute
+          ${config.sound.mediaKeys.volumeStep}- unmute
         ''; }
           
         # Raise volume keycode in current keyboard.
         { keys = [ 223 ]; events = [ "key" "rep" ]; command = ''
           ${pkgs.alsa-utils}/bin/amixer -q set Master \
-          ${sound.mediaKeys.volumeStep}+ unmute
+          ${config.sound.mediaKeys.volumeStep}+ unmute
         ''; }
   
         # Mic mute key was left unconfigured because there was none in my
