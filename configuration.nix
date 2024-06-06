@@ -6,26 +6,34 @@
 # - The bluetooth stuttering issues still happen using a phone hotspot
 #   connection but the issue with the WiFi connection stutters is likely still
 #   present without any bluetooth connection active, but maybe it's bluetooth
-#   altogether that need to be disabled; pending testing.
+#   altogether that needs to be disabled; pending testing.
 
 # Todo list:
-# mediaKeys for volume control don't work; they're wrongly set by actkbd so
-# instead of activating them through the mediaKeys.enable setting, you instead
-# set actkbd.enable and actkbd.bindings with the same implementation as the one
-# in source but the keys changed, seeing as that's the only thing that happens
-# when sound.mediaKeys are enabled.
-# WiFi might be interfering with the bluetooth audio channel because they likely
-# use the same hardware card, but do look into the issue of random stuttering.
-# Look into lesspager's error output.
-# Look into man xorg.conf for configuring xserver options; there are some that
-# are repeated from the xorg.conf file in specific NixOS parameters, so careful
-# not to set them up twice.
-# Set up zathura for PDF viewing.
-# Set up home-manager for managing home directory configs like i3; don't
-# configure them just yet.
-# i3wm has already had its font changed and the horizontal and vertical split
-# keybinds disabled; add to that enabling tabbed view as default to
-# home-manager.
+#
+# - mediaKeys for volume control don't work; they're wrongly set by actkbd so
+#   instead of activating them through the mediaKeys.enable setting, you set
+#   actkbd.enable and actkbd.bindings with the same implementation as the one in
+#   source but the keys changed, seeing as that's the only thing that happens
+#   when sound.mediaKeys are enabled.
+#
+# - WiFi might be interfering with the bluetooth audio channel because they
+#   likely use the same hardware card, but do look into the issue of random
+#   stuttering.
+#
+# - Look into lesspager's error output.
+#
+# - Look into man xorg.conf for configuring xserver options; there are some that
+#   are repeated from the xorg.conf file in specific NixOS parameters, so
+#   careful not to set them up twice.
+#
+# - Set up zathura for PDF viewing.
+#
+# - Set up home-manager for managing home directory configs like i3; don't
+#   configure them just yet.
+#
+# - i3wm has already had its font changed and the horizontal and vertical split
+#   keybinds disabled; add to that enabling tabbed view as default to
+#   home-manager.
 
 { config, lib, pkgs, ... }:
 
@@ -38,6 +46,8 @@
   # Qt configuration required for plugins on some packages to work.
   qt = {
     enable = true;
+
+    # All-out GTK2 customization.
     platformTheme = "gtk2";
     style = "gtk2";
   };
@@ -167,7 +177,7 @@
     };
 
     # Simple command prompt; needs to be included in systemPackages because the
-    # source doesn't include it by default.
+    # source implementation doesn't include it by default.
     iay = {
       enable = true;
       minimalPrompt = true;
@@ -222,9 +232,6 @@
         gst && cd -
       '';
       cgd = "cd /home/adam/nixos-config && gd && cd -";
-
-      # Firefox second-in-command (media consumption)
-      f = "(nix-shell -p firefox --command firefox &) ; exit";
     };
 
     # Declarative, user-independent ENV variables.
@@ -303,6 +310,7 @@
       subpixel.rgba = "rgb";
     };
 
+    # Instead of using the systemPackages option, use this specific setting.
     packages = [ pkgs.jetbrains-mono ];
   };
 
@@ -321,7 +329,7 @@
       # and use the default set user shell.
       isNormalUser = true;
 
-      # 'video' group required for hardware.acpilight.enable brightness control.
+      # 'video' group needed for programs.light to grant user access.
       extraGroups = [ "wheel" "video" "networkmanager" ];
 
       # Dumb, but it works on a local level (my current level).
@@ -330,7 +338,7 @@
   };
 
   services = {
-    # Enable udisks daemon for udevil wrapper; programs.udevil.
+    # Enable udisks2 daemon for udevil wrapper; programs.udevil.
     udisks2 = {
       enable = true;
 
@@ -340,7 +348,7 @@
 
     # Enable actkbd bindings for sound.mediaKeys; though don't enable the
     # mediaKeys themselves, only the implementation in
-    # services/audio/alsa.nix.
+    # services/audio/alsa.nix with the fixed keycodes.
     actkbd = {
       # Because we only need the bindings but these do not enable actkbd by
       # default in the implementation, it's enabled here.
@@ -349,21 +357,21 @@
       # The keycodes in actkbd are not the same as the ones in pkgs.xorg.xev;
       # more info at https://wiki.nixos.org/wiki/Actkbd.
       bindings = [
-        # Mute volume actkbd keycode in current keyboard.
+        # Mute volume keycode in current keyboard.
         { keys = [ 221 ]; events = [ "key" ]; command = ''
           ${pkgs.alsa-utils}/bin/amixer -q set Master toggle
         ''; }
       
-        # Lower volume actkbd keycode in current keyboard.
+        # Lower volume keycode in current keyboard.
         { keys = [ 222 ]; events = [ "key" "rep" ]; command = ''
           ${pkgs.alsa-utils}/bin/amixer -q set Master \
-          ${config.sound.mediaKeys.volumeStep}- unmute
+          ${sound.mediaKeys.volumeStep}- unmute
         ''; }
           
-        # Raise volume actkbd keycode in current keyboard.
+        # Raise volume keycode in current keyboard.
         { keys = [ 223 ]; events = [ "key" "rep" ]; command = ''
           ${pkgs.alsa-utils}/bin/amixer -q set Master \
-          ${config.sound.mediaKeys.volumeStep}+ unmute
+          ${sound.mediaKeys.volumeStep}+ unmute
         ''; }
   
         # Mic mute key was left unconfigured because there was none in my
@@ -377,7 +385,7 @@
     # Set the timezone automatically.
     automatic-timezoned.enable = true;
 
-    # kmscon; a virtual console replacement for gettys.
+    # kmscon; a vt-console replacement for gettys.
     kmscon = {
       enable = true;
 
@@ -428,7 +436,7 @@
       # Because we use i3, XDG autostart isn't run by default.
       desktopManager.runXdgAutostartIfNone = true;
 
-      # Set off all screen off events.
+      # Set off all screen-off events.
       serverFlagsSection = ''
         Option "BlankTime" "0"
 	Option "StandbyTime" "0"
@@ -474,13 +482,14 @@
 
     # Enable printing.
     printing = {
-      enable = true; # A WebUI is served by default at localhost:631.
+      # A WebUI is served by default at localhost:631.
+      enable = true;
 
-      # This prevents 'client-error-document-format-not-supported'.
+      # This should prevent 'client-error-document-format-not-supported'.
       cups-pdf.enable = true;
     };
 
-    # Enable Pipewire sound server.
+    # Configure the Pipewire sound server.
     pipewire = {
       enable = true;
 
@@ -507,10 +516,11 @@
     # Update microcode for my current CPU manufacturer.
     cpu.amd.updateMicrocode = true;
 
+    # Manage hardware acceleration.
     opengl = {
       enable = true;
 
-      # Install packages required for AMD hardware acceleration.
+      # Install required packages.
       extraPackages = with pkgs; [ rocmPackages.clr.icd amdvlk libva ];
     };
   };
@@ -592,6 +602,7 @@
     # Copies the system config to /run/current-system/configuration.nix.
     copySystemConfiguration = true;
 
-    stateVersion = "24.11"; # Don't touch this.
+    # Don't touch this.
+    stateVersion = "24.11";
   };
 }
