@@ -1,5 +1,5 @@
-# During your time outside (day 1), you were viewing the xorg.conf options in Workspace
-# 2; careful with the warning at the end of this file's todo list.
+# During your time outside (day 1), you were viewing the xorg.conf options in
+# Workspace 2; careful with the warning in the corresponding todo list item.
 
 # During your time outside (day 2): 
 # - A solution was implemented for the mediaKeys problem but is pending testing.
@@ -16,9 +16,6 @@
 # when sound.mediaKeys are enabled.
 # WiFi might be interfering with the bluetooth audio channel because they likely
 # use the same hardware card, but do look into the issue of random stuttering.
-# Set up Firefox as a second-in-command browser for media consumption (uBo is a
-# better ad-blocker than qutebrowser's); the command is set, only things left
-# are home directory cleaning and program.firefox config (including fonts).
 # Look into lesspager's error output.
 # Look into man xorg.conf for configuring xserver options; there are some that
 # are repeated from the xorg.conf file in specific NixOS parameters, so careful
@@ -26,6 +23,9 @@
 # Set up zathura for PDF viewing.
 # Set up home-manager for managing home directory configs like i3; don't
 # configure them just yet.
+# i3wm has already had its font changed and the horizontal and vertical split
+# keybinds disabled; add to that enabling tabbed view as default to
+# home-manager.
 
 { config, lib, pkgs, ... }:
 
@@ -341,7 +341,7 @@
     # Enable actkbd bindings for sound.mediaKeys; though don't enable the
     # mediaKeys themselves, only the implementation in
     # services/audio/alsa.nix.
-    atckbd = {
+    actkbd = {
       # Because we only need the bindings but these do not enable actkbd by
       # default in the implementation, it's enabled here.
       enable = true;
@@ -351,18 +351,18 @@
       bindings = [
         # Mute volume actkbd keycode in current keyboard.
         { keys = [ 221 ]; events = [ "key" ]; command = ''
-          ${alsa-utils}/bin/amixer -q set Master toggle
+          ${pkgs.alsa-utils}/bin/amixer -q set Master toggle
         ''; }
       
         # Lower volume actkbd keycode in current keyboard.
         { keys = [ 222 ]; events = [ "key" "rep" ]; command = ''
-          ${alsa-utils}/bin/amixer -q set Master \
+          ${pkgs.alsa-utils}/bin/amixer -q set Master \
           ${config.sound.mediaKeys.volumeStep}- unmute
         ''; }
           
         # Raise volume actkbd keycode in current keyboard.
         { keys = [ 223 ]; events = [ "key" "rep" ]; command = ''
-          ${alsa-utils}/bin/amixer -q set Master \
+          ${pkgs.alsa-utils}/bin/amixer -q set Master \
           ${config.sound.mediaKeys.volumeStep}+ unmute
         ''; }
   
