@@ -350,10 +350,6 @@
     # mediaKeys themselves, only the implementation in
     # services/audio/alsa.nix with the fixed keycodes.
     actkbd = {
-      # Because we only need the bindings but these do not enable actkbd by
-      # default in the implementation, it's enabled here.
-      enable = true;
-
       # The keycodes in actkbd are not the same as the ones in pkgs.xorg.xev;
       # more info at https://wiki.nixos.org/wiki/Actkbd.
       bindings = [
