@@ -189,6 +189,7 @@
     # Package management. To search for available packages, run:
     # $ nix-env -qaP wget
     systemPackages = with pkgs; [
+      rar
       mcomix
       rclone
       python3
