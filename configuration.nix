@@ -18,6 +18,7 @@
 #   keybinds disabled; add to that enabling tabbed view as default.
 # - Set up config in multiple files; divide each major setting below in files;
 #   get rid of ambiguous comments.
+# - Set up services.unclutter to support hiding the mouse during scroll events.
 { config, lib, pkgs, ... }:
 {
   imports = [
