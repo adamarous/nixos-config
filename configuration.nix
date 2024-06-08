@@ -3,7 +3,8 @@
 #   instead of activating them through the mediaKeys.enable setting, you set
 #   actkbd.bindings with the same implementation as the one in source but the
 #   keys changed, seeing as that's the only thing that happens when
-#   sound.mediaKeys are enabled.
+#   sound.mediaKeys are enabled; it could be the issue is with the parallel
+#   keybindings that i3wm sets up in its ~/.config/i3/config file.
 # - WiFi might be interfering with the bluetooth audio channel because they
 #   likely use the same hardware card, but do look into the issue of random
 #   stuttering.
