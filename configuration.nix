@@ -191,6 +191,7 @@
     # Package management. To search for available packages, run:
     # $ nix-env -qaP wget
     systemPackages = with pkgs; [
+      kcc
       rar
       mcomix
       rclone
