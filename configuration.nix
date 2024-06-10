@@ -7,7 +7,9 @@
 #   keybindings that i3wm sets up in its ~/.config/i3/config file.
 # - WiFi might be interfering with the bluetooth audio channel because they
 #   likely use the same hardware card, but do look into the issue of random
-#   stuttering.
+#   stuttering; in KDE there are no issues with the Internet, and the Bluettoh
+#   can be fixed by restarting the bluetooth service after connecting the
+#   device.
 # - Look into lesspager's error output.
 # - Look into man xorg.conf for configuring xserver options; there are some that
 #   are repeated from the xorg.conf file in specific NixOS parameters, so
